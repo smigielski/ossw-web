@@ -1,6 +1,14 @@
-var express = require('express');
-var http = require('http').Server(express);
-var io = require('socket.io')(http);
+var app = require('express')();
+var http = require('http').Server(app);
+var ipaddress = process.env.OPENSHIFT_NODEJS_IP;
+var port = process.env.OPENSHIFT_NODEJS_PORT || 8080;
+
+if (typeof ipaddress === "undefined") {
+            ipaddress = "127.0.0.1";
+};
+var server = app.listen(port, ipaddress)
+var io      = require('socket.io').listen(server);
+
 var fs      = require('fs');
 
 /**
@@ -11,21 +19,6 @@ var SampleApp = function() {
     //  Scope.
     var self = this;
 
-    /**
-     *  Set up server IP address and port # using env variables/defaults.
-     */
-    self.setupVariables = function() {
-        //  Set the environment variables we need.
-        self.ipaddress = process.env.OPENSHIFT_NODEJS_IP;
-        self.port      = process.env.OPENSHIFT_NODEJS_PORT || 8080;
-
-        if (typeof self.ipaddress === "undefined") {
-            //  Log errors on OpenShift but continue w/ 127.0.0.1 - this
-            //  allows us to run/test the app locally.
-            console.warn('No OPENSHIFT_NODEJS_IP var, using 127.0.0.1');
-            self.ipaddress = "127.0.0.1";
-        };
-    };
 
     /**
      *  Populate the cache.
@@ -95,11 +88,10 @@ var SampleApp = function() {
      */
     self.initializeServer = function() {
         self.createRoutes();
-        self.app = express.createServer();
 
         //  Add handlers for the app (from the routes).
         for (var r in self.routes) {
-            self.app.get(r, self.routes[r]);
+            app.get(r, self.routes[r]);
         }
 
 	io.on('connection', function(socket){
@@ -111,7 +103,6 @@ var SampleApp = function() {
      *  Initializes the sample application.
      */
     self.initialize = function() {
-        self.setupVariables();
         self.populateCache();
         self.setupTerminationHandlers();
 
@@ -124,10 +115,7 @@ var SampleApp = function() {
      */
     self.start = function() {
         //  Start the app on the specific interface (and port).
-        self.app.listen(self.port, self.ipaddress, function() {
-            console.log('%s: Node server started on %s:%d ...',
-                        Date(Date.now() ), self.ipaddress, self.port);
-        });
+
     };
 
 
