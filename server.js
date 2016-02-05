@@ -1,5 +1,7 @@
 var express = require('express');
 var http = require('http').Server(express);
+var io = require('socket.io')(http);
+var fs      = require('fs');
 
 /**
  *  Define the sample application.
@@ -26,6 +28,40 @@ var SampleApp = function() {
     };
 
     /**
+     *  Populate the cache.
+     */
+    self.populateCache = function() {
+        if (typeof self.zcache === "undefined") {
+            self.zcache = { 'index.html': '' };
+        }
+
+        //  Local cache for static content.
+        self.zcache['index.html'] = fs.readFileSync('./index.html');
+    };
+
+
+    /**
+     *  Retrieve entry (content) from cache.
+     *  @param {string} key  Key identifying content to retrieve from cache.
+     */
+    self.cache_get = function(key) { return self.zcache[key]; };
+
+
+    /**
+     *  terminator === the termination handler
+     *  Terminate server on receipt of the specified signal.
+     *  @param {string} sig  Signal to terminate on.
+     */
+    self.terminator = function(sig){
+        if (typeof sig === "string") {
+           console.log('%s: Received %s - terminating sample app ...',
+                       Date(Date.now()), sig);
+           process.exit(1);
+        }
+        console.log('%s: Node server stopped.', Date(Date.now()) );
+    };
+
+    /**
      *  Setup termination handlers (for exit and a list of signals).
      */
     self.setupTerminationHandlers = function(){
@@ -40,22 +76,35 @@ var SampleApp = function() {
         });
     };
 
+
+    /**
+     *  Create the routing table entries + handlers for the application.
+     */
+    self.createRoutes = function() {
+        self.routes = { };
+
+        self.routes['/'] = function(req, res) {
+            res.setHeader('Content-Type', 'text/html');
+            res.send(self.cache_get('index.html') );
+        };
+    };
+
     /**
      *  Initialize the server (express) and create the routes and register
      *  the handlers.
      */
     self.initializeServer = function() {
- //       self.createRoutes();
+        self.createRoutes();
         self.app = express.createServer();
 
         //  Add handlers for the app (from the routes).
-   //     for (var r in self.routes) {
-     //       self.app.get(r, self.routes[r]);
-     //   }
+        for (var r in self.routes) {
+            self.app.get(r, self.routes[r]);
+        }
 
-self.app.get('/', function(req, res){
- res.sendFile(__dirname + '/index.html');
-});
+	io.on('connection', function(socket){
+  		console.log('a user connected');
+	});
     };
 
     /**
@@ -63,7 +112,7 @@ self.app.get('/', function(req, res){
      */
     self.initialize = function() {
         self.setupVariables();
-//        self.populateCache();
+        self.populateCache();
         self.setupTerminationHandlers();
 
         // Create the express server and routes.
@@ -80,6 +129,8 @@ self.app.get('/', function(req, res){
                         Date(Date.now() ), self.ipaddress, self.port);
         });
     };
+
+
 
 }; 
 
