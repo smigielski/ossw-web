@@ -1,5 +1,5 @@
-var app = require('express')();
-var http = require('http').Server(app);
+var express = require('express');
+var http = require('http').Server(express);
 
 /**
  *  Define the sample application.
@@ -40,7 +40,23 @@ var SampleApp = function() {
         });
     };
 
+    /**
+     *  Initialize the server (express) and create the routes and register
+     *  the handlers.
+     */
+    self.initializeServer = function() {
+ //       self.createRoutes();
+        self.app = express.createServer();
 
+        //  Add handlers for the app (from the routes).
+   //     for (var r in self.routes) {
+     //       self.app.get(r, self.routes[r]);
+     //   }
+
+self.app.get('/', function(req, res){
+  res.send('<h1>Hello world</h1>');
+});
+    };
 
     /**
      *  Initializes the sample application.
@@ -51,7 +67,7 @@ var SampleApp = function() {
         self.setupTerminationHandlers();
 
         // Create the express server and routes.
- //       self.initializeServer();
+        self.initializeServer();
     };
 
     /**
@@ -67,9 +83,6 @@ var SampleApp = function() {
 
 }; 
 
-app.get('/', function(req, res){
-  res.send('<h1>Hello world</h1>');
-});
 
 /**
  *  main():  Main code.
