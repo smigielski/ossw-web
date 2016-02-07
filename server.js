@@ -7,9 +7,9 @@ var port = process.env.OPENSHIFT_NODEJS_PORT || 8080;
 if (typeof ipaddress === "undefined") {
             ipaddress = "127.0.0.1";
 };
+
 var server = app.listen(port, ipaddress)
 var io      = require('socket.io').listen(server);
-
 var fs      = require('fs');
 
 /**
@@ -20,25 +20,24 @@ var SampleApp = function() {
     //  Scope.
     var self = this;
 
-
     /**
      *  Populate the cache.
      */
-    self.populateCache = function() {
-        if (typeof self.zcache === "undefined") {
-            self.zcache = { 'index.html': '' };
-        }
-
-        //  Local cache for static content.
-        self.zcache['index.html'] = fs.readFileSync('./index.html');
-    };
+    // self.populateCache = function() {
+    //     if (typeof self.zcache === "undefined") {
+    //         self.zcache = { 'index.html': '' };
+    //     }
+    //
+    //     //  Local cache for static content.
+    //     self.zcache['index.html'] = fs.readFileSync('./index.html');
+    // };
 
 
     /**
      *  Retrieve entry (content) from cache.
      *  @param {string} key  Key identifying content to retrieve from cache.
      */
-    self.cache_get = function(key) { return self.zcache[key]; };
+    // self.cache_get = function(key) { return self.zcache[key]; };
 
 
     /**
@@ -77,56 +76,57 @@ var SampleApp = function() {
     self.createRoutes = function() {
         self.routes = { };
 
-        self.routes['/'] = function(req, res) {
-            res.setHeader('Content-Type', 'text/html');
-            res.send(self.cache_get('index.html') );
-        };
+        // self.routes['/'] = function(req, res) {
+        //     res.setHeader('Content-Type', 'text/html');
+        //     // res.send(self.cache_get('index.html') );
+        // };
     };
 
     /**
      *  Initialize the server (express) and create the routes and register
      *  the handlers.
      */
-    self.initializeServer = function() {
-        self.createRoutes();
+    self.initializeHttpServer = function() {
+      self.createRoutes();
 
-        //  Add handlers for the app (from the routes).
-        for (var r in self.routes) {
-            app.get(r, self.routes[r]);
-        }
+      //  Add handlers for the app (from the routes).
+      for (var r in self.routes) {
+          app.get(r, self.routes[r]);
+      }
 
-	app.use(express.static('public'));
+      app.use(express.static('public'));
 
-	io.on('connection', function(socket){
-  		console.log('a user connected');
-		socket.on('chat message', function(msg){
-    			console.log('message: ' + msg);
-  		});
-	});
     };
+
+    self.initializeSocketIO = function() {
+      io.on('connection', function(socket){
+  		  console.log('a user connected');
+
+        socket.on('channel', function(channel){
+          if (channel===undefined){
+            //create new
+            socket.emit('channel',{token: socket.id, url: ''});
+          } else {
+            console.log('joining: ' + channel.token);
+            socket.join(channel.token);
+          }
+        });
+      });
+    }
 
     /**
      *  Initializes the sample application.
      */
     self.initialize = function() {
-        self.populateCache();
+        // self.populateCache();
         self.setupTerminationHandlers();
 
         // Create the express server and routes.
-        self.initializeServer();
+        self.initializeHttpServer();
+        self.initializeSocketIO();
     };
 
-    /**
-     *  Start the server (starts up the sample application).
-     */
-    self.start = function() {
-        //  Start the app on the specific interface (and port).
-
-    };
-
-
-
-}; 
+};
 
 
 /**
@@ -134,6 +134,3 @@ var SampleApp = function() {
  */
 var zapp = new SampleApp();
 zapp.initialize();
-zapp.start();
-
-
