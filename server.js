@@ -1,4 +1,5 @@
-var app = require('express')();
+var express = require('express');
+var app = express();
 var http = require('http').Server(app);
 var ipaddress = process.env.OPENSHIFT_NODEJS_IP;
 var port = process.env.OPENSHIFT_NODEJS_PORT || 8080;
@@ -93,6 +94,8 @@ var SampleApp = function() {
         for (var r in self.routes) {
             app.get(r, self.routes[r]);
         }
+
+	app.use(express.static('public'));
 
 	io.on('connection', function(socket){
   		console.log('a user connected');

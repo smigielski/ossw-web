@@ -11,15 +11,21 @@
       #messages { list-style-type: none; margin: 0; padding: 0; }
       #messages li { padding: 5px 10px; }
       #messages li:nth-child(odd) { background: #eee; }
+      #qrcode {width:200px; margin:0 auto;}
     </style>
   </head>
   <body>
     <ul id="messages"></ul>
+    <div id="qrcode"></div>
     <form action="">
       <input id="m" autocomplete="off" /><button>Send</button>
     </form>
 <script src="/socket.io/socket.io.js"></script>
+<script src="/js/qrcode.js"></script>
 <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+<script type="text/javascript">
+new QRCode(document.getElementById("qrcode"), "kocham Marcina i Marysie");
+</script>
 <script>
   var socket = io.connect("http://nodejs-ossw.rhcloud.com:8000");
 $('form').submit(function(){
