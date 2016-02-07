@@ -104,17 +104,31 @@ var SampleApp = function() {
 
     self.initializeSocketIO = function() {
       io.on('connection', function(socket){
-  		  console.log('a user connected');
 
-        socket.on('channel', function(channel){
-          if (channel===undefined){
+        var client = {
+          ip : socket.request.connection.remoteAddress,
+          userAgent: socket.request.headers['user-agent']
+        };
+
+        console.log('a user connected' + JSON.stringify(client));
+
+        var channel;
+        socket.on('channel', function(_channel){
+          if (_channel===undefined){
             //create new
-            socket.emit('channel',{token: socket.id, url: wsUrl});
+            channel = {token: socket.id, url: wsUrl};
+            socket.emit('channel',channel);
           } else {
+            channel = _channel;
             console.log('joining: ' + channel.token);
             socket.join(channel.token);
+            socket.broadcast.to(channel.token).emit('client', client);
           }
         });
+
+        socket.on('message', function(message){
+          socket.broadcast.to(channel.token).emit('message', message);
+        })
       });
     }
 
