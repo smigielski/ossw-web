@@ -106,7 +106,7 @@ var SampleApp = function() {
       io.on('connection', function(socket){
 
         var client = {
-          ip : socket.request.connection.remoteAddress,
+          ip : socket.request.headers['X-Real-IP'] || socket.request.connection.remoteAddress,
           userAgent: socket.request.headers['user-agent']
         };
 
