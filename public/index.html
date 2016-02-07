@@ -25,38 +25,44 @@
 <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
 
 <script>
-  // var socket = io.connect("http://nodejs-ossw.rhcloud.com:8000");
   var channel;
-  var socket = io();
+  var socket;
   var qrcode;
+  // var socket = io.connect("http://nodejs-ossw.rhcloud.com:8000");
+  $.get( "/ws", function( data ) {
+    socket = io.connect(data.url);
+    socket.on('connect', function(){
+      if (channel===undefined){
+        $('#messages').append($('<li>').text('requesting for room'));
+        socket.emit('channel');
+      } else {
+        socket.emit('channel',channel);
+      }
+    });
+
+    socket.on('channel', function(_channel){
+      channel=_channel;
+      $('#messages').append($('<li>').text(JSON.stringify(channel)));
+      qrcode = new QRCode(document.getElementById("qrcode"),JSON.stringify(channel));
+    });
+
+    socket.on('client', function(client){
+      $('#messages').append($('<li>').text(JSON.stringify(client)));
+      qrcode.clear();
+    })
+
+    socket.on('chat message', function(_msg){
+      $('#messages').append($('<li>').text(_msg));
+    });
+  });
+
 $('form').submit(function(){
     socket.emit('chat message', $('#m').val());
     $('#m').val('');
     return false;
   });
-  socket.on('connect', function(){
-    if (channel===undefined){
-      $('#messages').append($('<li>').text('requesting for room'));
-      socket.emit('channel');
-    } else {
-      socket.emit('channel',channel);
-    }
-  });
 
-  socket.on('channel', function(_channel){
-    channel=_channel;
-    $('#messages').append($('<li>').text(JSON.stringify(channel)));
-    qrcode = new QRCode(document.getElementById("qrcode"),JSON.stringify(channel));
-  });
 
-  socket.on('client', function(client){
-    $('#messages').append($('<li>').text(JSON.stringify(client)));
-    qrcode.clear();
-  })
-
-  socket.on('chat message', function(_msg){
-    $('#messages').append($('<li>').text(_msg));
-  });
 </script>
   </body>
 </html>

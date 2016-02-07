@@ -3,7 +3,7 @@ var app = express();
 var http = require('http').Server(app);
 var ipaddress = process.env.OPENSHIFT_NODEJS_IP;
 var port = process.env.OPENSHIFT_NODEJS_PORT || 8080;
-
+var wsUrl = 'http://' + (process.env.OPENSHIFT_APP_DNS?process.env.OPENSHIFT_APP_DNS+":8000" : 'localhost:8080') ;
 if (typeof ipaddress === "undefined") {
             ipaddress = "127.0.0.1";
 };
@@ -73,21 +73,25 @@ var SampleApp = function() {
     /**
      *  Create the routing table entries + handlers for the application.
      */
-    self.createRoutes = function() {
-        self.routes = { };
+    // self.createRoutes = function() {
+        // self.routes = { };
 
         // self.routes['/'] = function(req, res) {
         //     res.setHeader('Content-Type', 'text/html');
         //     // res.send(self.cache_get('index.html') );
         // };
-    };
+    // };
 
     /**
      *  Initialize the server (express) and create the routes and register
      *  the handlers.
      */
     self.initializeHttpServer = function() {
-      self.createRoutes();
+      // self.createRoutes();
+
+      app.get('/ws', function (req, res) {
+        res.send({url: wsUrl});
+      });
 
       //  Add handlers for the app (from the routes).
       for (var r in self.routes) {
@@ -105,7 +109,7 @@ var SampleApp = function() {
         socket.on('channel', function(channel){
           if (channel===undefined){
             //create new
-            socket.emit('channel',{token: socket.id, url: ''});
+            socket.emit('channel',{token: socket.id, url: wsUrl});
           } else {
             console.log('joining: ' + channel.token);
             socket.join(channel.token);
