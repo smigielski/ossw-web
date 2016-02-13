@@ -121,6 +121,7 @@ var SampleApp = function() {
           if (_channel===undefined){
             //create new
             channel = {token: socket.id, url: wsSecureUrl};
+            console.log('create new channel: '+ channel.token);
             socket.emit('channel',channel);
           } else {
             channel = _channel;
@@ -131,6 +132,7 @@ var SampleApp = function() {
         });
 
         socket.on('message', function(message){
+          console.log('sending message: '+ message);
           socket.broadcast.to(channel.token).emit('message', message);
         })
       });
