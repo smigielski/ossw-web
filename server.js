@@ -1,12 +1,11 @@
 var express = require('express');
 var app = express();
 var http = require('http').Server(app);
-var ipaddress = process.env.OPENSHIFT_NODEJS_IP;
+var ipaddress = process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1';
 var port = process.env.OPENSHIFT_NODEJS_PORT || 8080;
-var wsUrl = process.env.OPENSHIFT_APP_DNS?process.env.OPENSHIFT_APP_DNS+":8000" : 'localhost:8080';
-if (typeof ipaddress === "undefined") {
-            ipaddress = "127.0.0.1";
-};
+var wsUrl = 'http://' + (process.env.OPENSHIFT_APP_DNS?process.env.OPENSHIFT_APP_DNS+":8000" : ipaddress+ ':'+port);
+var wsSecureUrl = 'https://' + (process.env.OPENSHIFT_APP_DNS?process.env.OPENSHIFT_APP_DNS+":8443" : ipaddress+':'+port);
+
 
 var server = app.listen(port, ipaddress)
 var io      = require('socket.io').listen(server);
@@ -90,7 +89,12 @@ var SampleApp = function() {
       // self.createRoutes();
 
       app.get('/ws', function (req, res) {
-        res.send({url: (req.headers['x-forwarded-proto']=='https' || req.secure?'https://':'http://') + wsUrl});
+        if (req.headers['x-forwarded-proto']=='https' || req.secure){
+          res.send({url: wsSecureUrl});
+        } else {
+          res.send({url: wsUrl});
+        }
+
       });
 
       //  Add handlers for the app (from the routes).
