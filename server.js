@@ -120,7 +120,7 @@ var SampleApp = function() {
         socket.on('channel', function(_channel){
           if (_channel===undefined){
             //create new
-            channel = {token: socket.id, url: wsUrl};
+            channel = {token: socket.id, url: socket.request.secure?wsSecureUrl:wsUrl};
             socket.emit('channel',channel);
           } else {
             channel = _channel;
