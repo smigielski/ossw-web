@@ -3,7 +3,7 @@ var app = express();
 var http = require('http').Server(app);
 var ipaddress = process.env.OPENSHIFT_NODEJS_IP;
 var port = process.env.OPENSHIFT_NODEJS_PORT || 8080;
-var wsUrl = '://' + (process.env.OPENSHIFT_APP_DNS?process.env.OPENSHIFT_APP_DNS+":8000" : 'localhost:8080') ;
+var wsUrl = process.env.OPENSHIFT_APP_DNS?process.env.OPENSHIFT_APP_DNS+":8000" : 'localhost:8080';
 if (typeof ipaddress === "undefined") {
             ipaddress = "127.0.0.1";
 };
@@ -90,7 +90,7 @@ var SampleApp = function() {
       // self.createRoutes();
 
       app.get('/ws', function (req, res) {
-        res.send({url: req.protocol + wsUrl});
+        res.send({url: (req.secure?'https://':'http://') + wsUrl});
       });
 
       //  Add handlers for the app (from the routes).
