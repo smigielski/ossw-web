@@ -90,7 +90,7 @@ var SampleApp = function() {
       // self.createRoutes();
 
       app.get('/ws', function (req, res) {
-        res.send({url: (request.headers['x-forwarded-proto']!='http' || req.secure?'https://':'http://' + wsUrl});
+        res.send({url: (request.headers['x-forwarded-proto']!='http' || req.secure?'https://':'http://') + wsUrl});
       });
 
       //  Add handlers for the app (from the routes).
