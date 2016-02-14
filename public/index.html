@@ -52,7 +52,7 @@
     })
 
     socket.on('message', function(_msg){
-      $('#messages').append($('<li>').text(_msg));
+      $('#messages').append($('<li>').text(JSON.stringify(_msg)));
     });
   });
 
