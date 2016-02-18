@@ -1,0 +1,87 @@
+OSSW Protocol description
+=========================
+
+== Packages
+
+Single package may contain maximum of 20bytes where first byte is header and
+remaining are the command body.
+
+Every command consist of command number and optional data bytes.
+Maximum command length is 255 bytes which gives 14 packages but the last one is
+not a full length.
+
+== Header
+
+
+.Header byte description
+[cols="8*^", options="header"]
+|===
+| 0    | 1  | 2  | 3 | 4 | 5 | 6 | 7
+| RQ/RS | START 2+|   STATUS?? 4+| NUM_TO_GO
+|===
+
+*RQ/RS* - request (0) response (1) bit +
+*START* - first package of the command (1) +
+*STATUS??* - send (00), processed (01), repeat (10), error (11) +
+*NUM_TO_GO* - number of packets that still will be sent with this command
+
+== Commands
+
+Request and responses share the same command space. First bit of the command
+determines if this command is from primary command space or extended one.
+For extended commands two bytes need to be read to determine the command type.
+
+.Primary command
+[cols="8*^", options="header"]
+|===
+| 0    | 1  | 2  | 3 | 4 | 5 | 6 | 7
+| 0 7+| COMMAND_ID
+|===
+
+.Extended command
+[cols="16*^", options="header"]
+|===
+| 0    | 1  | 2  | 3 | 4 | 5 | 6 | 7 | 0 | 1  | 2  | 3 | 4 | 5 | 6 | 7
+| 1 7+| COMMAND_ID_MSB 8+| COMMAND_ID_LSB
+|===
+
+All the currently supported commands are listed in the table.
+
+.Commands
+[cols="5,^1,1,10", options="header"]
+|===
+| Name | Type | ID | Comment
+| SCR_MNGE_HANDLE_EVENT | RQ | 0x01 |
+| RTC_SET_CURRENT_TIME |  RQ |0x10 |
+| SET_DEFAULT_GLOBAL_ACTIONS |RQ | 0x10 |
+| SET_DEFAULT_WATCH_FACE_ACTIONS |RQ | 0x11 |
+| OPEN_FILE_STREAM | RQ | 0x21 |
+| APPEND_DATA_TO_FILE_STREAM |RQ | 0x22 |
+| CLOSE_FILE_STREAM |RQ | 0x23 |
+| LIST_FILES | | RQ | request file listing
+4+a|
+[cols="6*^"]
+Command data format:
+!==============================================
+! 0x00 ! 0x01 ! 0x02 ! ... ! 0x1F ! 0x20
+6+! Path [char*]
+!==============================================
+| FILE_SYSTEM_INFO | RS | | send details about file system usage such as size and free space
+4+a|
+[cols="12*^"]
+Command data format:
+!==============================================
+! 0x00 ! 0x01 ! 0x02 ! 0x03 ! 0x04 ! 0x05 ! 0x06 ! 0x07 ! 0x08 ! 0x09 ! 0x0A ! 0x0B
+4+! Total [u32_t] 4+! Used [u32_t] 4+! Free [u32_t]
+!==============================================
+| FILE_INFO | RS | | send name, type and size of the file
+| SET_EXT_PROPERTY_VALUE |RQ | 0x30 |
+| |RQ | 0x40 | init notification upload
+| |RQ | 0x41 | upload notification part
+| |RQ | 0x42 | upload notification finished
+| |RQ | 0x43 | extend alert notification
+| |RQ | 0x44 | stop alert notification
+| CONFIRM_COMMAND_PROCESSED | RS |0x40 |
+| INVOKE_EXTERNAL_FUNCTION | RS | 0x11 |
+| INVOKE_NOTIFICATION_FUNCTION | RS | 0x12 |
+| SET_WATCH_SET_ID | RS | 0x10 |
